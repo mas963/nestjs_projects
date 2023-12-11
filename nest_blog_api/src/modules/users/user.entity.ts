@@ -15,7 +15,7 @@ export class User {
     @Column()
     password: string;
 
-    @Column({ type: 'enum', enum: ['m', 'f', 'u'] })
+    @Column({ type: 'enum', enum: ['male', 'female', 'undefined'] })
     gender: string;
 
     @OneToMany(() => Post, (photo) => photo.user)
