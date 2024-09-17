@@ -1,11 +1,6 @@
 import { IdentifiableEntitySchema } from './identifiable-entity.schema';
 import { AggregateRoot } from '@nestjs/cqrs';
-import {
-  FilterQuery,
-  Model,
-  _AllowStringsForIds,
-  LeanDocument,
-} from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { EntitySchemaFactory } from './entity-schema.factory';
 import { NotFoundException } from '@nestjs/common';
 
@@ -55,17 +50,15 @@ export abstract class EntityRepository<
     entityFilterQuery: FilterQuery<TSchema>,
     entity: TEntity,
   ): Promise<void> {
-    const updatedEntityDocument = await this.entityModel.findOneAndReplace(
-      entityFilterQuery,
-      (this.entitySchemaFactory.create(
-        entity,
-      ) as unknown) as _AllowStringsForIds<LeanDocument<TSchema>>,
-      {
-        new: true,
-        useFindAndModify: false,
-        lean: true,
-      },
-    );
+    const updatedEntityDocument = await this.entityModel
+      .findOneAndReplace(
+        entityFilterQuery,
+        this.entitySchemaFactory.create(entity), // Doğrudan entity nesnesini geçiyoruz
+        {
+          returnDocument: 'after', // new: true yerine kullanılır
+        },
+      )
+      .lean(); // lean() kullanarak sonuçları optimize edilmiş plain JavaScript objesine dönüştürüyoruz
 
     if (!updatedEntityDocument) {
       throw new NotFoundException('Unable to find the entity to replace.');
